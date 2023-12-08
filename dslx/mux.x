@@ -13,10 +13,18 @@
 // limitations under the License.
 
 import apfloat
+import rle.rle_common
+import rle.rle_dec
+import rle.rle_enc
 
 const EXP_SZ = u32:4;
 const FRACTION_SZ = u32:3;
 type F8 = apfloat::APFloat<EXP_SZ, FRACTION_SZ>;
+
+const SYMBOL_WIDTH = u32:1;
+const COUNT_WIDTH = u32:6;
+type RleCompressed = rle_common::CompressedData<SYMBOL_WIDTH, COUNT_WIDTH>;
+type RlePlain = rle_common::PlainData<SYMBOL_WIDTH>;
 
 fn u8_to_f8(a: u8) -> F8 {
   F8{sign: a[7:8], bexp: a[3:7], fraction: a[0:3]}
@@ -36,6 +44,9 @@ enum Sel: u3 {
   F8_ADD = 1,
   F8_SUB = 2,
   F8_MUL = 3,
+  RLE_ENC = 4,
+  RLE_DEC = 5,
+  RLE_LOOP = 6,
 }
 
 struct Arg2 {
@@ -47,13 +58,24 @@ struct Arg2 {
 proc Mux {
   input_r: chan<Arg2> in;
   output_s: chan<u8> out;
+  rle_enc_input_s: chan<RlePlain> out;
+  rle_enc_output_r: chan<RleCompressed> in;
+  rle_dec_input_s: chan<RleCompressed> out;
+  rle_dec_output_r: chan<RlePlain> in;
 
   init {
     ()
   }
 
   config(input_r: chan<Arg2> in, output_s: chan<u8> out) {
-    (input_r, output_s)
+    let (rle_enc_input_s, rle_enc_input_r) = chan<RlePlain>;
+    let (rle_enc_output_s, rle_enc_output_r) = chan<RleCompressed>;
+    let (rle_dec_input_s, rle_dec_input_r) = chan<RleCompressed>;
+    let (rle_dec_output_s, rle_dec_output_r) = chan<RlePlain>;
+
+    spawn rle_enc::RunLengthEncoder<SYMBOL_WIDTH, COUNT_WIDTH>(rle_enc_input_r, rle_enc_output_s);
+    spawn rle_dec::RunLengthDecoder<SYMBOL_WIDTH, COUNT_WIDTH>(rle_dec_input_r, rle_dec_output_s);
+    (input_r, output_s, rle_enc_input_s, rle_enc_output_r, rle_dec_input_s, rle_dec_output_r)
   }
 
   next(tok: token, state: ()) {
@@ -63,6 +85,23 @@ proc Mux {
       Sel::F8_ADD => f8_to_u8(apfloat::add(u8_to_f8(arg2.a), u8_to_f8(arg2.b))),
       Sel::F8_SUB => f8_to_u8(apfloat::sub(u8_to_f8(arg2.a), u8_to_f8(arg2.b))),
       Sel::F8_MUL => f8_to_u8(apfloat::mul(u8_to_f8(arg2.a), u8_to_f8(arg2.b))),
+      Sel::RLE_ENC => {
+        let tok = send(tok, rle_enc_input_s, RlePlain{
+	  symbol: arg2.a[0+:uN[SYMBOL_WIDTH]],
+	  last: arg2.b[0+:u1],
+	});
+	let (tok, enc_output) = recv(tok, rle_enc_output_r);
+	(enc_output.last ++ enc_output.count ++ enc_output.symbol) as u8
+      },
+      Sel::RLE_DEC => {
+        let tok = send(tok, rle_dec_input_s, RleCompressed{
+	  symbol: arg2.a[0+:uN[SYMBOL_WIDTH]],
+	  count: arg2.b[0+:uN[COUNT_WIDTH]],
+	  last: arg2.b[COUNT_WIDTH+:u1]
+	});
+	let (tok, dec_output) = recv(tok, rle_dec_output_r);
+	(dec_output.last ++ dec_output.symbol) as u8
+      },
       _ => fail!("mux_unsupported_sel", u8:0),
     };
     send(tok, output_s, result);
@@ -90,11 +129,10 @@ proc mux_test {
     let (tok, result) = recv(tok, mux_output_r);
     assert_eq(result, u8:42);
 
-    // f8
     const f8_a = u8_to_f8(u8:0b01010011);
     const f8_b = u8_to_f8(u8:0b00100001);
 
-    // f8_add
+    // add
     let tok = send(tok, mux_input_s, Arg2{
       sel: Sel::F8_ADD,
       a: f8_to_u8(f8_a),
@@ -103,7 +141,7 @@ proc mux_test {
     let (tok, result) = recv(tok, mux_output_r);
     assert_eq(u8_to_f8(result), apfloat::add(f8_a, f8_b));
 
-    // f8_sub
+    // sub
     let tok = send(tok, mux_input_s, Arg2{
       sel: Sel::F8_SUB,
       a: f8_to_u8(f8_a),
@@ -112,7 +150,7 @@ proc mux_test {
     let (tok, result) = recv(tok, mux_output_r);
     assert_eq(u8_to_f8(result), apfloat::sub(f8_a, f8_b));
 
-    // f8_mul
+    // mul
     let tok = send(tok, mux_input_s, Arg2{
       sel: Sel::F8_MUL,
       a: f8_to_u8(f8_a),
