@@ -80,18 +80,23 @@ proc Mux {
 
   next(tok: token, state: ()) {
     let (tok, arg2) = recv(tok, input_r);
-    let result = match(arg2.sel) {
-      Sel::NOOP => arg2.a,
-      Sel::F8_ADD => f8_to_u8(apfloat::add(u8_to_f8(arg2.a), u8_to_f8(arg2.b))),
-      Sel::F8_SUB => f8_to_u8(apfloat::sub(u8_to_f8(arg2.a), u8_to_f8(arg2.b))),
-      Sel::F8_MUL => f8_to_u8(apfloat::mul(u8_to_f8(arg2.a), u8_to_f8(arg2.b))),
+    match(arg2.sel) {
+      Sel::NOOP => {send(tok, output_s, arg2.a);},
+      Sel::F8_ADD => {send(tok, output_s, f8_to_u8(apfloat::add(u8_to_f8(arg2.a), u8_to_f8(arg2.b))));},
+      Sel::F8_SUB => {send(tok, output_s, f8_to_u8(apfloat::sub(u8_to_f8(arg2.a), u8_to_f8(arg2.b))));},
+      Sel::F8_MUL => {send(tok, output_s, f8_to_u8(apfloat::mul(u8_to_f8(arg2.a), u8_to_f8(arg2.b))));},
       Sel::RLE_ENC => {
         let tok = send(tok, rle_enc_input_s, RlePlain{
 	  symbol: arg2.a[0+:uN[SYMBOL_WIDTH]],
 	  last: arg2.b[0+:u1],
 	});
-	let (tok, enc_output) = recv(tok, rle_enc_output_r);
-	(enc_output.last ++ enc_output.count ++ enc_output.symbol) as u8
+	let (tok, enc_output, valid) = recv_non_blocking(tok, rle_enc_output_r, RleCompressed{
+	  symbol: uN[SYMBOL_WIDTH]:0,
+	  count: uN[COUNT_WIDTH]:0,
+	  last: u1:0,
+	});
+	trace_fmt!("recv_non_blocking valid:{}", valid);
+	send_if(tok, output_s, valid, (enc_output.last ++ enc_output.count ++ enc_output.symbol) as u8);
       },
       Sel::RLE_DEC => {
         let tok = send(tok, rle_dec_input_s, RleCompressed{
@@ -99,12 +104,14 @@ proc Mux {
 	  count: arg2.b[0+:uN[COUNT_WIDTH]],
 	  last: arg2.b[COUNT_WIDTH+:u1]
 	});
-	let (tok, dec_output) = recv(tok, rle_dec_output_r);
-	(dec_output.last ++ dec_output.symbol) as u8
+	let (tok', dec_output, valid) = recv_non_blocking(tok, rle_dec_output_r, RlePlain{
+	  symbol: uN[SYMBOL_WIDTH]:0,
+	  last: u1:0,
+	});
+	send_if(tok', output_s, valid, (dec_output.last ++ dec_output.symbol) as u8);
       },
-      _ => fail!("mux_unsupported_sel", u8:0),
-    };
-    send(tok, output_s, result);
+      _ => fail!("mux_unsupported_sel", ()),
+    }
   }
 }
 
@@ -158,6 +165,7 @@ proc mux_test {
     });
     let (tok, result) = recv(tok, mux_output_r);
     assert_eq(u8_to_f8(result), apfloat::mul(f8_a, f8_b));
+
     send(tok, terminator, true);
   }
 }
