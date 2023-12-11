@@ -85,42 +85,39 @@ proc Mux {
 
   next(tok: token, state: ()) {
     let (tok, arg2) = recv(tok, input_r);
-    let (tok, result) = match(arg2.sel) {
-      Sel::NOOP => (tok, arg2.a),
-      Sel::F8_ADD => (tok, f8_to_u8(apfloat::add(u8_to_f8(arg2.a), u8_to_f8(arg2.b)))),
-      Sel::F8_SUB => (tok, f8_to_u8(apfloat::sub(u8_to_f8(arg2.a), u8_to_f8(arg2.b)))),
-      Sel::F8_MUL => (tok, f8_to_u8(apfloat::mul(u8_to_f8(arg2.a), u8_to_f8(arg2.b)))),
+    match(arg2.sel) {
+      Sel::NOOP => {send(tok, output_s, arg2.a);},
+      Sel::F8_ADD => {send(tok, output_s, f8_to_u8(apfloat::add(u8_to_f8(arg2.a), u8_to_f8(arg2.b))));},
+      Sel::F8_SUB => {send(tok, output_s, f8_to_u8(apfloat::sub(u8_to_f8(arg2.a), u8_to_f8(arg2.b))));},
+      Sel::F8_MUL => {send(tok, output_s, f8_to_u8(apfloat::mul(u8_to_f8(arg2.a), u8_to_f8(arg2.b))));},
       Sel::RLE_OP => {
 	match(arg2.a[0+:u2] as RleOp) {
 	  RleOp::RLE_ENC_WRITE => {
-	    let tok = send(tok, rle_enc_input_s, RlePlain{
+	    send(tok, rle_enc_input_s, RlePlain{
 	      symbol: arg2.b[0+:uN[SYMBOL_WIDTH]],
 	      last: arg2.b[SYMBOL_WIDTH+COUNT_WIDTH+:u1],
 	    });
-	    (tok, u8:0)
 	  },
 	  RleOp::RLE_ENC_READ => {
 	    let (tok, enc_output) = recv(tok, rle_enc_output_r);
-	    (tok, (enc_output.last ++ enc_output.count ++ enc_output.symbol) as u8)
+	    send(tok, output_s, (enc_output.last ++ enc_output.count ++ enc_output.symbol) as u8);
 	  },
 	  RleOp::RLE_DEC_WRITE => {
-	    let tok = send(tok, rle_dec_input_s, RleCompressed{
+	    send(tok, rle_dec_input_s, RleCompressed{
 	      symbol: arg2.b[0+:uN[SYMBOL_WIDTH]],
 	      count: arg2.b[SYMBOL_WIDTH+:uN[COUNT_WIDTH]],
 	      last: arg2.b[SYMBOL_WIDTH+COUNT_WIDTH+:u1]
 	    });
-	    (tok, u8:0)
 	  },
 	  RleOp::RLE_DEC_READ => {
 	    let (tok, dec_output) = recv(tok, rle_dec_output_r);
-	    (tok, (dec_output.last ++ uN[COUNT_WIDTH]:0 ++ dec_output.symbol) as u8)
+	    send(tok, output_s, (dec_output.last ++ uN[COUNT_WIDTH]:0 ++ dec_output.symbol) as u8);
 	  },
-	  _ => fail!("mux_unsupported_rle_op", (tok, u8:0)),
+	  _ => fail!("mux_unsupported_rle_op", ()),
 	}
       },
-      _ => fail!("mux_unsupported_sel", (tok, u8:0)),
+      _ => fail!("mux_unsupported_sel", ()),
     };
-    send(tok, output_s, result);
   }
 }
 
@@ -221,22 +218,16 @@ proc mux_rle_test {
       a: RleOp::RLE_ENC_WRITE as u8,
       b: u8:0b0_000000_1, // symbol: 1, last: false
     });
-    let (tok, result) = recv(tok, mux_output_r);
-    assert_eq(result, u8:0);  // ack
     let tok = send(tok, mux_input_s, Arg2{
       sel: Sel::RLE_OP,
       a: RleOp::RLE_ENC_WRITE as u8, 
       b: u8:0b0_000000_1, // symbol: 1, last: false
     });
-    let (tok, result) = recv(tok, mux_output_r);
-    assert_eq(result, u8:0);  // ack
     let tok = send(tok, mux_input_s, Arg2{
       sel: Sel::RLE_OP,
       a: RleOp::RLE_ENC_WRITE as u8,
       b: u8:0b1_000000_1, // symbol: 1, last: false
     });
-    let (tok, result) = recv(tok, mux_output_r);
-    assert_eq(result, u8:0);  // ack
     let tok = send(tok, mux_input_s, Arg2{
       sel: Sel::RLE_OP,
       a: RleOp::RLE_ENC_READ as u8,
@@ -251,8 +242,6 @@ proc mux_rle_test {
       a: RleOp::RLE_DEC_WRITE as u8,
       b: u8:0b1_000011_1,  // last: true, count: 3, symbol: 1
     });
-    let (tok, result) = recv(tok, mux_output_r);
-    assert_eq(result, u8:0);  // ack    
     let tok = send(tok, mux_input_s, Arg2{
       sel: Sel::RLE_OP,
       a: RleOp::RLE_DEC_READ as u8,
