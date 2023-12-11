@@ -83,43 +83,48 @@ proc Mux {
   }
 
   next(tok: token, state: MuxState) {
-    let (tok_op, arg2, op_valid) = recv_non_blocking(tok, input_r, Arg2{sel: Sel::NOOP, a: u8:0, b: u8:0});
+    let (tok_op, arg2, op_valid) = recv_non_blocking(tok, input_r, Arg2{sel: Sel::NOOP, a: state as u8, b: u8:0});
     let (tok_enc, enc_output, enc_valid) = recv_non_blocking(tok, rle_enc_output_r, RleCompressed{symbol: uN[SYMBOL_WIDTH]:0, count: uN[COUNT_WIDTH]:0, last: false});
     let (tok_dec, dec_output, dec_valid) = recv_non_blocking(tok, rle_dec_output_r, RlePlain{symbol: uN[SYMBOL_WIDTH]:0, last: false});
-    let (packet, state) = match(state) {
+    let tok = join(tok_op, tok_enc, tok_dec);
+    let (packet, state') = match(state) {
       MuxState::NONE => {
-        let packet = match(arg2.sel) {
-          Sel::NOOP => arg2.a,
-          Sel::F8_ADD => f8_to_u8(apfloat::add(u8_to_f8(arg2.a), u8_to_f8(arg2.b))),
-          Sel::F8_SUB => f8_to_u8(apfloat::sub(u8_to_f8(arg2.a), u8_to_f8(arg2.b))),
-          Sel::F8_MUL => f8_to_u8(apfloat::mul(u8_to_f8(arg2.a), u8_to_f8(arg2.b))),
-          Sel::RLE => u8:0,
-          _ => fail!("mux_unsupported_sel", u8:0),
-        };
-        let state = arg2.b as MuxState;
-        (packet, state)
+	trace_fmt!("mux_state: none");
+	match(arg2.sel) {
+	  Sel::NOOP => (arg2.a, MuxState::NONE),
+	  Sel::F8_ADD => (f8_to_u8(apfloat::add(u8_to_f8(arg2.a), u8_to_f8(arg2.b))), MuxState::NONE),
+	  Sel::F8_SUB => (f8_to_u8(apfloat::sub(u8_to_f8(arg2.a), u8_to_f8(arg2.b))), MuxState::NONE),
+	  Sel::F8_MUL => (f8_to_u8(apfloat::mul(u8_to_f8(arg2.a), u8_to_f8(arg2.b))), MuxState::NONE),
+	  Sel::RLE => (u8:0, arg2.a[0+:u2] as MuxState),
+	  _ => fail!("mux_unsupported_sel", (u8:0, state)),
+	}
       },
       MuxState::RLE_ENC => {
-        send_if(tok, rle_enc_input_s, op_valid, RlePlain{
-          symbol: arg2.b[0+:uN[SYMBOL_WIDTH]],
-          last: arg2.b[SYMBOL_WIDTH+COUNT_WIDTH+:u1],
-        });
-	(enc_output.last ++ enc_output.count ++ enc_output.symbol, MuxState::RLE_ENC)
+	trace_fmt!("mux_state: rle_enc");
+	send_if(tok, rle_enc_input_s, op_valid, RlePlain{
+	  symbol: arg2.b[0+:uN[SYMBOL_WIDTH]],
+	  last: arg2.b[SYMBOL_WIDTH+COUNT_WIDTH+:u1],
+	});
+	(enc_output.last ++ enc_output.count ++ enc_output.symbol, arg2.a[0+:u2] as MuxState)
       },
       MuxState::RLE_DEC => {
-        send_if(tok, rle_dec_input_s, op_valid, RleCompressed{
-          symbol: arg2.b[0+:uN[SYMBOL_WIDTH]],
-          count: arg2.b[SYMBOL_WIDTH+:uN[COUNT_WIDTH]],
-          last: arg2.b[SYMBOL_WIDTH+COUNT_WIDTH+:u1]
-        });
-	(dec_output.last ++ uN[COUNT_WIDTH]:0 ++ dec_output.symbol, MuxState::RLE_DEC)
+	trace_fmt!("mux_state: rle_dec");
+	send_if(tok, rle_dec_input_s, op_valid, RleCompressed{
+	  symbol: arg2.b[0+:uN[SYMBOL_WIDTH]],
+	  count: arg2.b[SYMBOL_WIDTH+:uN[COUNT_WIDTH]],
+	  last: arg2.b[SYMBOL_WIDTH+COUNT_WIDTH+:u1]
+	});
+	(dec_output.last ++ uN[COUNT_WIDTH]:0 ++ dec_output.symbol, arg2.a[0+:u2] as MuxState)
       },
       _ => fail!("mux_unsupported_state", (u8:0, MuxState::NONE)),
     };
-    let tok = join(tok_op, tok_enc, tok_dec);
-    let packet_valid = op_valid || enc_valid || dec_valid;  
+    trace_fmt!("op_valid: {}", op_valid);
+    trace_fmt!("enc_valid: {}", enc_valid);
+    trace_fmt!("dec_valid: {}", dec_valid);
+    trace_fmt!("state: {} -> {}", state, state');            
+    let packet_valid = (op_valid && state' == MuxState::NONE) || enc_valid || dec_valid;
     send_if(tok, output_s, packet_valid, packet);
-    state
+    state'
   }
 }
 
@@ -223,22 +228,20 @@ proc mux_rle_test {
       a: MuxState::RLE_ENC as u8,
       b: u8:0,
     });
-    let (tok, result) = recv(tok, mux_output_r);
-    assert_eq(result, u8:0); // ack  
 
     let tok = send(tok, mux_input_s, Arg2{
       sel: Sel::RLE,
-      a: u8:0,
+      a: MuxState::RLE_ENC as u8,
       b: u8:0b0_000000_1, // symbol: 1, last: false
     });
     let tok = send(tok, mux_input_s, Arg2{
       sel: Sel::RLE,
-      a: u8:0,
+      a: MuxState::RLE_ENC as u8,
       b: u8:0b0_000000_1, // symbol: 1, last: false
     });
     let tok = send(tok, mux_input_s, Arg2{
       sel: Sel::RLE,
-      a: u8:0,
+      a: MuxState::RLE_ENC as u8,
       b: u8:0b1_000000_1, // symbol: 1, last: false
     });
     let (tok, result) = recv(tok, mux_output_r);
@@ -253,10 +256,10 @@ proc mux_rle_test {
 
     let tok = send(tok, mux_input_s, Arg2{
       sel: Sel::RLE,
-      a: u8:0,  
+      a: MuxState::RLE_DEC as u8,
       b: u8:0b1_000011_1,  // last: true, count: 3, symbol: 1
     });
-      
+
     let (tok, result) = recv(tok, mux_output_r);
     assert_eq(result, u8:1);
     let (tok, result) = recv(tok, mux_output_r);
