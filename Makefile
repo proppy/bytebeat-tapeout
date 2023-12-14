@@ -349,14 +349,14 @@ setup-cocotb: install-caravel-cocotb setup-cocotb-env simenv-cocotb
 .PHONY: cocotb-verify-all-rtl
 cocotb-verify-all-rtl: 
 	@(cd $(PROJECT_ROOT)/verilog/dv/cocotb && $(PROJECT_ROOT)/venv-cocotb/bin/caravel_cocotb -tl user_proj_tests/user_proj_tests.yaml )
-	
+
 .PHONY: cocotb-verify-all-gl
 cocotb-verify-all-gl:
 	@(cd $(PROJECT_ROOT)/verilog/dv/cocotb && $(PROJECT_ROOT)/venv-cocotb/bin/caravel_cocotb -tl user_proj_tests/user_proj_tests_gl.yaml -verbosity quiet)
 
 $(cocotb-dv-targets-rtl): cocotb-verify-%-rtl: 
 	@(cd $(PROJECT_ROOT)/verilog/dv/cocotb && $(PROJECT_ROOT)/venv-cocotb/bin/caravel_cocotb -t $*  )
-	
+
 $(cocotb-dv-targets-gl): cocotb-verify-%-gl:
 	@(cd $(PROJECT_ROOT)/verilog/dv/cocotb && $(PROJECT_ROOT)/venv-cocotb/bin/caravel_cocotb -t $* -verbosity quiet)
 
@@ -457,3 +457,8 @@ caravel-sta: ./env/spef-mapping.tcl $(CARAVEL_ROOT)/signoff/caravel_core/openlan
 	@echo "You can find results for all corners in $(CUP_ROOT)/signoff/caravel/openlane-signoff/timing/"
 	@echo "Check summary.log of a specific corner to point to reports with reg2reg violations"
 	@echo "Cap and slew violations are inside summary.log file itself"
+
+dslx: dslx/fpu8.x dslx/rle1.x
+	(cd dslx && ir_converter_main -top fpu8 fpu8.x | opt_main - | codegen_main --delay_model=unit --generator=combinational --use_system_verilog=false --module_name=fpu8 -) > verilog/rtl/fpu8.v
+	(cd dslx && ir_converter_main -top Rle1Encoder rle1.x | opt_main --top=__rle_rle_enc__Rle1Encoder__RunLengthEncoder_0__4_1_next - | codegen_main -module_name=rle1_enc --delay_model=unit --pipeline_stages=1 --use_system_verilog=false --reset=reset -) > verilog/rtl/rle1_enc.v
+	(cd dslx && ir_converter_main -top Rle1Decoder rle1.x | opt_main --top=__rle_rle_dec__Rle1Decoder__RunLengthDecoder_0__4_1_next - | codegen_main -module_name=rle1_dec --delay_model=unit --pipeline_stages=1 --use_system_verilog=false --reset=reset -) > verilog/rtl/rle1_dec.v
