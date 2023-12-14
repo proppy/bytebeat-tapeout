@@ -84,7 +84,7 @@ module user_project_wrapper #(
        .drivers({bus_fpu8_out, bus_rle1_enc_out, bus_rle1_dec_out}),
        .out(io_out[34:27])
    );
-   
+
 fpu8_wrap fpu8_wrap_0 (
 `ifdef USE_POWER_PINS
 	.vdd(vdd),	// User area 1 1.8V power
@@ -101,16 +101,31 @@ rle1_enc_wrap rle1_enc_wrap_0 (
 	.vdd(vdd),	// User area 1 1.8V power
 	.vss(vss),	// User area 1 digital ground
 `endif
-        .clk(bus_rle1_enc_in[0]),
+	.clk(bus_rle1_enc_in[0]),
 	.reset(bus_rle1_enc_in[1]),
-        .rle1__input_r(bus_rle1_enc_in[3:2]),
-        .rle1__input_r_vld(bus_rle1_enc_in[4]),
-        .rle1__output_s_rdy(bus_rle1_enc_in[5]),
-        .rle1__output_s(bus_rle1_enc_out[5:0]),
-        .rle1__output_s_vld(bus_rle1_enc_out[6]),
-        .rle1__input_r_rdy(bus_rle1_enc_out[7])
+	.rle1__input_r(bus_rle1_enc_in[3:2]),
+	.rle1__input_r_vld(bus_rle1_enc_in[4]),
+	.rle1__output_s_rdy(bus_rle1_enc_in[5]),
+	.rle1__output_s(bus_rle1_enc_out[5:0]),
+	.rle1__output_s_vld(bus_rle1_enc_out[6]),
+	.rle1__input_r_rdy(bus_rle1_enc_out[7])
 );
-   
+
+rle1_dec_wrap rle1_dec_wrap_0(
+`ifdef USE_POWER_PINS
+	.vdd(vdd),	// User area 1 1.8V power
+	.vss(vss),	// User area 1 digital ground
+`endif
+	.clk(bus_rle1_dec_in[0]),
+	.reset(bus_rle1_dec_in[1]),
+	.rle1__input_r(bus_rle1_dec_in[7:2]),
+	.rle1__input_r_vld(bus_rle1_dec_in[8]),
+	.rle1__output_s_rdy(bus_rle1_dec_in[9]),
+	.rle1__output_s(bus_rle1_dec_out[1:0]),
+	.rle1__output_s_vld(bus_rle1_dec_out[2]),
+	.rle1__input_r_rdy(bus_rle1_dec_out[3])
+);
+
 assign io_oeb[34:27] = 8'b00000000;
 
 endmodule	// user_project_wrapper
