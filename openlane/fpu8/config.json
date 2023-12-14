@@ -1,0 +1,28 @@
+{
+    "PDK": "gf180mcuD",
+    "STD_CELL_LIBRARY": "gf180mcu_fd_sc_mcu7t5v0",
+    "DESIGN_NAME": "fpu8_wrap",
+    "VERILOG_FILES": [
+	"dir::../../verilog/rtl/defines.v",
+	"dir::../../verilog/rtl/fpu8.v",
+	"dir::../../verilog/rtl/fpu8_wrap.v"
+    ],
+    "DESIGN_IS_CORE": 0,
+    "FP_SIZING": "absolute",
+    "DIE_AREA": "0 0 300 150",
+    "FP_PIN_ORDER_CFG": "dir::pin_order.cfg",
+    "CLOCK_PERIOD": 50.0,
+    "PL_BASIC_PLACEMENT": 0,
+    "PL_TARGET_DENSITY": 0.40,
+    "FP_CORE_UTIL": 40,
+    "RT_MAX_LAYER": "Metal4",
+    "VDD_NETS": [
+	"vdd"
+    ],
+    "GND_NETS": [
+	"vss"
+    ],
+    "RUN_HEURISTIC_DIODE_INSERTION": 1,
+    "RUN_CVC": 1,
+    "QUIT_ON_LINTER_ERRORS": 0
+}
