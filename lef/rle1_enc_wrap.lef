@@ -1,0 +1,221 @@
+VERSION 5.7 ;
+  NOWIREEXTENSIONATPIN ON ;
+  DIVIDERCHAR "/" ;
+  BUSBITCHARS "[]" ;
+MACRO rle1_enc_wrap
+  CLASS BLOCK ;
+  FOREIGN rle1_enc_wrap ;
+  ORIGIN 0.000 0.000 ;
+  SIZE 100.000 BY 100.000 ;
+  PIN clk
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 4.738000 ;
+    ANTENNADIFFAREA 0.410400 ;
+    PORT
+      LAYER Metal2 ;
+        RECT 24.640 96.000 25.200 100.000 ;
+    END
+  END clk
+  PIN reset
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.741000 ;
+    ANTENNADIFFAREA 0.410400 ;
+    PORT
+      LAYER Metal2 ;
+        RECT 73.920 96.000 74.480 100.000 ;
+    END
+  END reset
+  PIN rle1__input_r[0]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.741000 ;
+    ANTENNADIFFAREA 0.410400 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 0.000 61.600 4.000 62.160 ;
+    END
+  END rle1__input_r[0]
+  PIN rle1__input_r[1]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.741000 ;
+    ANTENNADIFFAREA 0.410400 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 0.000 86.240 4.000 86.800 ;
+    END
+  END rle1__input_r[1]
+  PIN rle1__input_r_rdy
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 4.731200 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 0.000 12.320 4.000 12.880 ;
+    END
+  END rle1__input_r_rdy
+  PIN rle1__input_r_vld
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.741000 ;
+    ANTENNADIFFAREA 0.410400 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 0.000 36.960 4.000 37.520 ;
+    END
+  END rle1__input_r_vld
+  PIN rle1__output_s[0]
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 4.731200 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 96.000 30.240 100.000 30.800 ;
+    END
+  END rle1__output_s[0]
+  PIN rle1__output_s[1]
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 4.731200 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 96.000 42.560 100.000 43.120 ;
+    END
+  END rle1__output_s[1]
+  PIN rle1__output_s[2]
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 4.731200 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 96.000 54.880 100.000 55.440 ;
+    END
+  END rle1__output_s[2]
+  PIN rle1__output_s[3]
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 4.731200 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 96.000 67.200 100.000 67.760 ;
+    END
+  END rle1__output_s[3]
+  PIN rle1__output_s[4]
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 4.731200 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 96.000 79.520 100.000 80.080 ;
+    END
+  END rle1__output_s[4]
+  PIN rle1__output_s[5]
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 4.731200 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 96.000 91.840 100.000 92.400 ;
+    END
+  END rle1__output_s[5]
+  PIN rle1__output_s_rdy
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.741000 ;
+    ANTENNADIFFAREA 0.410400 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 96.000 5.600 100.000 6.160 ;
+    END
+  END rle1__output_s_rdy
+  PIN rle1__output_s_vld
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 4.731200 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 96.000 17.920 100.000 18.480 ;
+    END
+  END rle1__output_s_vld
+  PIN vdd
+    DIRECTION INOUT ;
+    USE POWER ;
+    PORT
+      LAYER Metal4 ;
+        RECT 16.700 15.380 18.300 82.620 ;
+    END
+    PORT
+      LAYER Metal4 ;
+        RECT 38.260 15.380 39.860 82.620 ;
+    END
+    PORT
+      LAYER Metal4 ;
+        RECT 59.820 15.380 61.420 82.620 ;
+    END
+    PORT
+      LAYER Metal4 ;
+        RECT 81.380 15.380 82.980 82.620 ;
+    END
+  END vdd
+  PIN vss
+    DIRECTION INOUT ;
+    USE GROUND ;
+    PORT
+      LAYER Metal4 ;
+        RECT 27.480 15.380 29.080 82.620 ;
+    END
+    PORT
+      LAYER Metal4 ;
+        RECT 49.040 15.380 50.640 82.620 ;
+    END
+    PORT
+      LAYER Metal4 ;
+        RECT 70.600 15.380 72.200 82.620 ;
+    END
+    PORT
+      LAYER Metal4 ;
+        RECT 92.160 15.380 93.760 82.620 ;
+    END
+  END vss
+  OBS
+      LAYER Metal1 ;
+        RECT 6.720 15.380 93.760 82.620 ;
+      LAYER Metal2 ;
+        RECT 8.540 95.700 24.340 96.000 ;
+        RECT 25.500 95.700 73.620 96.000 ;
+        RECT 74.780 95.700 93.620 96.000 ;
+        RECT 8.540 5.690 93.620 95.700 ;
+      LAYER Metal3 ;
+        RECT 4.000 91.540 95.700 92.260 ;
+        RECT 4.000 87.100 96.000 91.540 ;
+        RECT 4.300 85.940 96.000 87.100 ;
+        RECT 4.000 80.380 96.000 85.940 ;
+        RECT 4.000 79.220 95.700 80.380 ;
+        RECT 4.000 68.060 96.000 79.220 ;
+        RECT 4.000 66.900 95.700 68.060 ;
+        RECT 4.000 62.460 96.000 66.900 ;
+        RECT 4.300 61.300 96.000 62.460 ;
+        RECT 4.000 55.740 96.000 61.300 ;
+        RECT 4.000 54.580 95.700 55.740 ;
+        RECT 4.000 43.420 96.000 54.580 ;
+        RECT 4.000 42.260 95.700 43.420 ;
+        RECT 4.000 37.820 96.000 42.260 ;
+        RECT 4.300 36.660 96.000 37.820 ;
+        RECT 4.000 31.100 96.000 36.660 ;
+        RECT 4.000 29.940 95.700 31.100 ;
+        RECT 4.000 18.780 96.000 29.940 ;
+        RECT 4.000 17.620 95.700 18.780 ;
+        RECT 4.000 13.180 96.000 17.620 ;
+        RECT 4.300 12.020 96.000 13.180 ;
+        RECT 4.000 6.460 96.000 12.020 ;
+        RECT 4.000 5.740 95.700 6.460 ;
+      LAYER Metal4 ;
+        RECT 29.820 25.290 37.960 70.470 ;
+        RECT 40.160 25.290 48.740 70.470 ;
+        RECT 50.940 25.290 59.220 70.470 ;
+  END
+END rle1_enc_wrap
+END LIBRARY
+
