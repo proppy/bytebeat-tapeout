@@ -7,10 +7,10 @@ module rle1_dec_wrap(
 `endif
   input wire clk,
   input wire reset,
-  input wire [1:0] rle1__input_r,
+  input wire [5:0] rle1__input_r,
   input wire rle1__input_r_vld,
   input wire rle1__output_s_rdy,
-  output wire [5:0] rle1__output_s,
+  output wire [1:0] rle1__output_s,
   output wire rle1__output_s_vld,
   output wire rle1__input_r_rdy
 );
