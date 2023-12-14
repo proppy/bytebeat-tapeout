@@ -29,6 +29,7 @@ endif
 
 openlane_cmd = \
 	"flow.tcl \
+        -verbose 9 \
 	-design $$(realpath ./$*) \
 	-save_path $$(realpath ..) \
 	-save \
