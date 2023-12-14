@@ -22,7 +22,7 @@ type F8 = apfloat::APFloat<EXP_SZ, FRACTION_SZ>;
 enum Op : u3 {
     ADD = 1,
     SUB = 2,
-    MUL = 3,
+    MUL = 4,
 }
 
 fn u8_to_f8(a: u8) -> F8 { F8 { sign: a[7:8], bexp: a[3:7], fraction: a[0:3] } }

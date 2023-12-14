@@ -3,7 +3,7 @@ import rle.rle_dec
 import rle.rle_common
 
 const SYMBOL_WIDTH = u32:1;
-const COUNT_WIDTH = u32:7;
+const COUNT_WIDTH = u32:4;
 
 type Rle1Compressed = rle_common::CompressedData<SYMBOL_WIDTH, COUNT_WIDTH>;
 type Rle1Plain = rle_common::PlainData<SYMBOL_WIDTH>;
@@ -57,12 +57,12 @@ proc RleEncoderTest {
     }
 
     next(tok: token, state: ()) {
-	let tok = send(tok, rle_input_s, Rle1Plain{symbol: u1:1, last: false});
-	let tok = send(tok, rle_input_s, Rle1Plain{symbol: u1:1, last: false});
-	let tok = send(tok, rle_input_s, Rle1Plain{symbol: u1:1, last: true});
+	let tok = send(tok, rle_input_s, Rle1Plain{symbol: uN[SYMBOL_WIDTH]:1, last: false});
+	let tok = send(tok, rle_input_s, Rle1Plain{symbol: uN[SYMBOL_WIDTH]:1, last: false});
+	let tok = send(tok, rle_input_s, Rle1Plain{symbol: uN[SYMBOL_WIDTH]:1, last: true});
 	let (tok, result) = recv(tok, rle_output_r);
-	assert_eq(result.symbol, u1:1);
-	assert_eq(result.count, u7:3);
+	assert_eq(result.symbol, uN[SYMBOL_WIDTH]:1);
+	assert_eq(result.count, uN[COUNT_WIDTH]:3);
 	assert_eq(result.last, true);
 
 	send(tok, terminator, true);
@@ -87,16 +87,16 @@ proc RleDecoderTest {
 
     next(tok: token, state: ()) {
 	let tok = send(tok, rle_input_s, Rle1Compressed{
-	    symbol: u1:1, count: u7:3, last: true,
+	    symbol: uN[SYMBOL_WIDTH]:1, count: uN[COUNT_WIDTH]:3, last: true,
 	});
 	let (tok, result) = recv(tok, rle_output_r);
-	assert_eq(result.symbol, u1:1);
+	assert_eq(result.symbol, uN[SYMBOL_WIDTH]:1);
 	assert_eq(result.last, false);
 	let (tok, result) = recv(tok, rle_output_r);
-	assert_eq(result.symbol, u1:1);
+	assert_eq(result.symbol, uN[SYMBOL_WIDTH]:1);
 	assert_eq(result.last, false);
 	let (tok, result) = recv(tok, rle_output_r);
-	assert_eq(result.symbol, u1:1);
+	assert_eq(result.symbol, uN[SYMBOL_WIDTH]:1);
 	assert_eq(result.last, true);
 
 	send(tok, terminator, true);
