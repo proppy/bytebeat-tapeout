@@ -13,19 +13,23 @@
     "MACRO_PLACEMENT_CFG": "dir::macro.cfg",
     "VERILOG_FILES_BLACKBOX": [
 	"dir::../../verilog/gl/fpu8_wrap.v",
-	"dir::../../verilog/gl/rle1_enc_wrap.v"
+	"dir::../../verilog/gl/rle1_enc_wrap.v",
+	"dir::../../verilog/gl/rle1_dec_wrap.v"	
     ],
     "EXTRA_LEFS": [
 	"dir::../../lef/fpu8_wrap.lef",
-	"dir::../../lef/rle1_enc_wrap.lef"
+	"dir::../../lef/rle1_enc_wrap.lef",
+	"dir::../../lef/rle1_dec_wrap.lef"	
     ],
     "EXTRA_GDS_FILES": [
 	"dir::../../gds/fpu8_wrap.gds",
-	"dir::../../gds/rle1_enc_wrap.gds"
+	"dir::../../gds/rle1_enc_wrap.gds",
+	"dir::../../gds/rle1_dec_wrap.gds"
     ],
     "EXTRA_LIBS": [
 	"dir::../../lib/fpu8_wrap.lib",
-	"dir::../../lib/rle1_enc_wrap.lib"
+	"dir::../../lib/rle1_enc_wrap.lib",
+	"dir::../../lib/rle1_dec_wrap.lib"	
     ],
     "EXTRA_SPEFS": [
 	"fpu8_wrap",
@@ -35,11 +39,16 @@
 	"rle1_enc_wrap",
 	"dir::../../spef/multicorner/rle1_enc_wrap.min.spef",
 	"dir::../../spef/multicorner/rle1_enc_wrap.nom.spef",
+	"dir::../../spef/multicorner/rle1_enc_wrap.max.spef",
+	"rle1_dec_wrap",
+	"dir::../../spef/multicorner/rle1_enc_wrap.min.spef",
+	"dir::../../spef/multicorner/rle1_enc_wrap.nom.spef",
 	"dir::../../spef/multicorner/rle1_enc_wrap.max.spef"
     ],
     "FP_PDN_MACRO_HOOKS": [
 	"fpu8_wrap_0 vdd vss vdd vss",
-	"rle1_enc_wrap_0 vdd vss vdd vss"
+	"rle1_enc_wrap_0 vdd vss vdd vss",
+	"rle1_dec_wrap_0 vdd vss vdd vss"	
     ],
     "QUIT_ON_SYNTH_CHECKS": 0,
     "FP_PDN_CHECK_NODES": 0,
