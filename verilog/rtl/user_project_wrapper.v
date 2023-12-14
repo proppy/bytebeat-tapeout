@@ -66,45 +66,52 @@ module user_project_wrapper #(
     output [2:0] user_irq
 );
 
-/*--------------------------------------*/
-/* User project is instantiated  here   */
-/*--------------------------------------*/
+   wire [18:0] bus_fpu8_in;
+   wire [7:0]  bus_fpu8_out;
+   wire [18:0] bus_rle1_enc_in;
+   wire [7:0]  bus_rle1_enc_out;
+   wire [18:0] bus_rle1_dec_in;
+   wire [7:0]  bus_rle1_dec_out;
 
-user_proj_example mprj (
+   demux3_19 demux_0(
+       .sel(io_in[7:5]),
+       .driver(io_in[26:8]),
+       .out({bus_fpu8_in, bus_rle1_enc_in, bus_rle1_dec_in})
+   );
+
+   mux3_8 mux_0(
+       .sel(io_in[7:5]),
+       .drivers({bus_fpu8_out, bus_rle1_enc_out, bus_rle1_dec_out}),
+       .out(io_out[34:27])
+   );
+   
+fpu8_wrap fpu8_wrap_0 (
 `ifdef USE_POWER_PINS
 	.vdd(vdd),	// User area 1 1.8V power
 	.vss(vss),	// User area 1 digital ground
 `endif
-
-    .wb_clk_i(wb_clk_i),
-    .wb_rst_i(wb_rst_i),
-
-    // MGMT SoC Wishbone Slave
-
-    .wbs_cyc_i(wbs_cyc_i),
-    .wbs_stb_i(wbs_stb_i),
-    .wbs_we_i(wbs_we_i),
-    .wbs_sel_i(wbs_sel_i),
-    .wbs_adr_i(wbs_adr_i),
-    .wbs_dat_i(wbs_dat_i),
-    .wbs_ack_o(wbs_ack_o),
-    .wbs_dat_o(wbs_dat_o),
-
-    // Logic Analyzer
-
-    .la_data_in(la_data_in),
-    .la_data_out(la_data_out),
-    .la_oenb (la_oenb),
-
-    // IO Pads
-
-    .io_in ({io_in[37:30],io_in[7:0]}),
-    .io_out({io_out[37:30],io_out[7:0]}),
-    .io_oeb({io_oeb[37:30],io_oeb[7:0]}),
-
-    // IRQ
-    .irq(user_irq)
+	.op(bus_fpu8_in[2:0]),
+	.a(bus_fpu8_in[10:3]),
+	.b(bus_fpu8_in[18:11]),
+	.out(bus_fpu8_out)
 );
+
+rle1_enc_wrap rle1_enc_wrap_0 (
+`ifdef USE_POWER_PINS
+	.vdd(vdd),	// User area 1 1.8V power
+	.vss(vss),	// User area 1 digital ground
+`endif
+        .clk(bus_rle1_enc_in[0]),
+	.reset(bus_rle1_enc_in[1]),
+        .rle1__input_r(bus_rle1_enc_in[3:2]),
+        .rle1__input_r_vld(bus_rle1_enc_in[4]),
+        .rle1__output_s_rdy(bus_rle1_enc_in[5]),
+        .rle1__output_s(bus_rle1_enc_out[5:0]),
+        .rle1__output_s_vld(bus_rle1_enc_out[6]),
+        .rle1__input_r_rdy(bus_rle1_enc_out[7])
+);
+   
+assign io_oeb[34:27] = 8'b00000000;
 
 endmodule	// user_project_wrapper
 
